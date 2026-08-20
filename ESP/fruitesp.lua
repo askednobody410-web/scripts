@@ -14,6 +14,9 @@ if not char then
     warn("Character not found!")
 end
 
+local fruitModels = {}
+local running = true
+
 local function notifyuser()
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
@@ -70,34 +73,42 @@ local function esp(target)
         beam.Width1 = 0.25
         beam.FaceCamera = true
     end
-    
-    if target:IsA("Model") and string.find(target.Name, "Fruit") then
-        local hue = tick() * 0.2 % 1
-        local color = Color3.fromHSV(hue, 1, 1)
-        beam.Color = ColorSequence.new(color)
-    end
 
     return true
 end
 
-for _, v in pairs(game.Workspace:GetChildren()) do
-    if string.find(v.Name, "Fruit") then
+local function rainbowFruit(fruit)
+    while running and fruit and fruit.Parent do
+        local beam = game.Workspace:FindFirstChild("Tracer_" .. fruit.Name)
+        if beam then
+            local hue = tick() * 0.15 % 1
+            beam.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1))
+        end
+        task.wait()
+    end
+end
+
+local function checkFruit(v)
+    if string.find(v.Name, "Fruit") and v:IsA("Model") and not fruitModels[v] then
         if esp(v) then
             sendnotif(v)
+            fruitModels[v] = true
+            coroutine.wrap(rainbowFruit)(v)
         end
     end
 end
 
+for _, v in pairs(game.Workspace:GetChildren()) do
+    checkFruit(v)
+end
+
 game.Workspace.ChildAdded:Connect(function(v)
-    if string.find(v.Name, "Fruit") then
-        if esp(v) then
-            sendnotif(v)
-        end
-    end
+    checkFruit(v)
 end)
 
 game.Workspace.ChildRemoved:Connect(function(v)
     if string.find(v.Name, "Fruit") then
+        fruitModels[v] = nil
         local beam = game.Workspace:FindFirstChild("Tracer_" .. v.Name)
         if beam then
             beam:Destroy()
@@ -106,15 +117,3 @@ game.Workspace.ChildRemoved:Connect(function(v)
 end)
 
 notifyuser()
-
-game:GetService("RunService").Heartbeat:Connect(function()
-    for _, v in pairs(game.Workspace:GetChildren()) do
-        if string.find(v.Name, "Fruit") and v:IsA("Model") then
-            local beam = game.Workspace:FindFirstChild("Tracer_" .. v.Name)
-            if beam then
-                local hue = tick() * 0.15 % 1
-                beam.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1))
-            end
-        end
-    end
-end)
