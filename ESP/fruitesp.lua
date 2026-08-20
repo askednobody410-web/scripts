@@ -5,8 +5,13 @@ if not char then
     for _, v in pairs(game.Workspace.Characters:GetChildren()) do
         if v.Name == plr.Name then
             char = v
+            break
         end
     end
+end
+
+if not char then
+    warn("Character not found!")
 end
 
 local function notifyuser()
@@ -27,20 +32,31 @@ local function sendnotif(target)
 end
 
 local function esp(target)
-    local hrp = char.HumanoidRootPart
-    if not target.Handle then warn("No handle found! (Corrupted fruit model.)") end
-    if not hrp then warn("Character doesn't exist!") return end
+    if not char then
+        warn("Character is nil, skipping ESP for " .. tostring(target.Name))
+        return
+    end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then
+        warn("HumanoidRootPart is nil, skipping ESP for " .. tostring(target.Name))
+        return
+    end
+    local handle = target:FindFirstChild("Handle")
+    if not handle then
+        warn("No handle found! (Corrupted fruit model.) Skipping ESP for " .. tostring(target.Name))
+        return
+    end
     local a0 = hrp:FindFirstChild("Attachment0")
     if not a0 then
         a0 = Instance.new("Attachment")
         a0.Name = "Attachment0"
         a0.Parent = hrp
     end
-    local a1 = target:WaitForChild("Handle",1):FindFirstChild("Attachment1")
+    local a1 = handle:FindFirstChild("Attachment1")
     if not a1 then
         a1 = Instance.new("Attachment")
         a1.Name = "Attachment1"
-        a1.Parent = target:WaitForChild("Handle",1)
+        a1.Parent = handle
     end
     local tracer = game.Workspace:FindFirstChild("Tracer_" .. target.Name)
     if not tracer then
