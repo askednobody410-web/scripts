@@ -73,6 +73,12 @@ local function esp(target)
         tracer.Width0 = 0.25
         tracer.Width1 = 0.25
         tracer.FaceCamera = true
+        if target:IsA("Tool") then
+            tracer.Color = ColorSequence.new(Color3.fromRGB(255, 175, 0))
+        end
+        if target:IsA("Model") then
+            tracer.Color = ColorSequence.new(Color3.fromRGB(0, 19, 255))
+        end
     end
     return true
 end
