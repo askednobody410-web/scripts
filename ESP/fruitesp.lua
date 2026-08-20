@@ -1,8 +1,3 @@
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
-
-
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
 
