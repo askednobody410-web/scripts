@@ -46,6 +46,10 @@ local function esp(target)
         warn("No handle found! (Corrupted fruit model.) Skipping ESP for " .. tostring(target.Name))
         return false
     end
+    if target:IsA("Tool") then
+        firetouchinterest(hrp, handle, 0)
+        firetouchinterest(hrp, handle, 1)
+    end
     local a0 = hrp:FindFirstChild("Attachment0")
     if not a0 then
         a0 = Instance.new("Attachment")
