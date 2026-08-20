@@ -56,7 +56,7 @@ local function esp(target)
         warn("No handle found! (Corrupted fruit model.) Skipping ESP for " .. tostring(target.Name))
         return false
     end
-    if target:IsA("Tool") then
+    if target:IsA("Tool") and _G.AutoPickup then
         firetouchinterest(hrp, handle, 0)
         firetouchinterest(hrp, handle, 1)
     end
