@@ -49,8 +49,8 @@ local function esp(target)
         return false
     end
     if target:IsA("Tool") then
-        firetouchinterest(hrp, target.Handle, true)
-        firetouchinterest(hrp, target.Handle, false)
+        firetouchinterest(root, handle, 0)
+        firetouchinterest(root, handle, 1)
     end
     local att0 = root:FindFirstChild("Attachment0")
     if not att0 then
