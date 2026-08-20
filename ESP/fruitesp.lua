@@ -102,4 +102,11 @@ game.Workspace.ChildAdded:Connect(function(v)
     end
 end)
 
+game.Workspace.ChildRemoved:Connect(function(v)
+    if string.find(v.Name, "Fruit") then
+        local tracer = game.Workspace:FindFirstChild("Tracer_" .. v.Name)
+        tracer:Destroy()
+    end
+end)
+
 notifyuser()
