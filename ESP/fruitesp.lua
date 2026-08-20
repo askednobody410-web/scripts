@@ -25,6 +25,7 @@ local function notifyuser()
 end
 
 local function sendnotif(target)
+    local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
         "Notify",
         "A " .. target.Name .. " was <Color=Red>detected!<Color=/>"
