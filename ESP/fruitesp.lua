@@ -1,3 +1,8 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
 
@@ -18,7 +23,11 @@ if plr.Name == "vikchope" then
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
         "Notify",
-        ""
+        "Fuck you nigger"
+    )
+    firesignal(Event.OnClientEvent,
+        "Notify",
+        "viknigger"
     )
 end
 
