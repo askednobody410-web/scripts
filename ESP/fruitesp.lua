@@ -34,17 +34,17 @@ end
 local function esp(target)
     if not char then
         warn("Character is nil, skipping ESP for " .. tostring(target.Name))
-        return
+        return false
     end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then
         warn("HumanoidRootPart is nil, skipping ESP for " .. tostring(target.Name))
-        return
+        return false
     end
     local handle = target:FindFirstChild("Handle")
     if not handle then
         warn("No handle found! (Corrupted fruit model.) Skipping ESP for " .. tostring(target.Name))
-        return
+        return false
     end
     local a0 = hrp:FindFirstChild("Attachment0")
     if not a0 then
@@ -69,19 +69,22 @@ local function esp(target)
         tracer.Width1 = 0.25
         tracer.FaceCamera = true
     end
+    return true
 end
 
 for _, v in pairs(game.Workspace:GetChildren()) do
     if string.find(v.Name, "Fruit") then
-        esp(v)
-        sendnotif(v)
+        if esp(v) then
+            sendnotif(v)
+        end
     end
 end
 
 game.Workspace.ChildAdded:Connect(function(v)
     if string.find(v.Name, "Fruit") then
-        esp(v)
-        sendnotif(v)
+        if esp(v) then
+            sendnotif(v)
+        end
     end
 end)
 
