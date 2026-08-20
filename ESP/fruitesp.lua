@@ -18,7 +18,7 @@ if plr.Name == "vikchope" then
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
         "Notify",
-        "<Color=Red>Fuck you nigger"
+        "<Color=Red>fuck you nigger<Color=/>"
     )
 end
 
