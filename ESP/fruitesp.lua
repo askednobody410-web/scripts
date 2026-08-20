@@ -1,8 +1,6 @@
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
 
-_G.AutoPickup = false
-
 if not char then
     for _, v in pairs(game.Workspace.Characters:GetChildren()) do
         if v.Name == plr.Name then
@@ -44,12 +42,8 @@ local function esp(target)
     end
     local handle = target:FindFirstChild("Handle")
     if not handle then
-        warn("No handle found! (Corrupted fruit model.) Skipping ESP for " .. tostring(target.Name))
+        warn("No handle found! (Corrupted model OR target is not a fruit.) Skipping ESP for " .. tostring(target.Name))
         return false
-    end
-    if target:IsA("Tool") and _G.AutoPickup then
-        firetouchinterest(hrp, handle, 0)
-        firetouchinterest(hrp, handle, 1)
     end
     local a0 = hrp:FindFirstChild("Attachment0")
     if not a0 then
