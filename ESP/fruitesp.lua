@@ -18,7 +18,7 @@ local function notifyuser()
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
         "Notify",
-        "<Color=Red>Script loaded succesfully.<Color=/>"
+        "<Color=Green>Script loaded succesfully.<Color=/>"
     )
 end
 
