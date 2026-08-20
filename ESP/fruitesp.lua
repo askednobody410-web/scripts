@@ -1,6 +1,8 @@
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
 
+_G.AutoPickup = nil
+
 if not char then
     for _, v in pairs(game.Workspace.Characters:GetChildren()) do
         if v.Name == plr.Name then
