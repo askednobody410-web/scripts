@@ -45,7 +45,7 @@ local function esp(target)
         warn("No handle found! (Corrupted model OR target is not a fruit.) Skipping ESP for " .. tostring(target.Name))
         return false
     end
-    
+
     local att0 = root:FindFirstChild("Attachment0")
     if not att0 then
         att0 = Instance.new("Attachment")
@@ -58,7 +58,7 @@ local function esp(target)
         att1.Name = "Attachment1"
         att1.Parent = handle
     end
-    
+
     local beam = game.Workspace:FindFirstChild("Tracer_" .. target.Name)
     if not beam then
         beam = Instance.new("Beam")
@@ -69,13 +69,14 @@ local function esp(target)
         beam.Width0 = 0.25
         beam.Width1 = 0.25
         beam.FaceCamera = true
-        if target:IsA("Tool") then
-            beam.Color = ColorSequence.new(Color3.fromRGB(255, 175, 0))
-        else
-            beam.Color = ColorSequence.new(Color3.fromRGB(0, 19, 255))
-        end
     end
     
+    if target:IsA("Model") and string.find(target.Name, "Fruit") then
+        local hue = tick() % 1
+        local color = Color3.fromHSV(hue, 1, 1)
+        beam.Color = ColorSequence.new(color)
+    end
+
     return true
 end
 
@@ -105,3 +106,15 @@ game.Workspace.ChildRemoved:Connect(function(v)
 end)
 
 notifyuser()
+
+while wait(0.1) do
+    for _, v in pairs(game.Workspace:GetChildren()) do
+        if string.find(v.Name, "Fruit") and v:IsA("Model") then
+            local beam = game.Workspace:FindFirstChild("Tracer_" .. v.Name)
+            if beam then
+                local hue = tick() % 1
+                beam.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1))
+            end
+        end
+    end
+end
