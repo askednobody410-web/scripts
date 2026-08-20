@@ -72,7 +72,7 @@ local function esp(target)
     end
     
     if target:IsA("Model") and string.find(target.Name, "Fruit") then
-        local hue = tick() % 1
+        local hue = tick() * 0.2 % 1
         local color = Color3.fromHSV(hue, 1, 1)
         beam.Color = ColorSequence.new(color)
     end
@@ -107,14 +107,14 @@ end)
 
 notifyuser()
 
-while wait(0.1) do
+game:GetService("RunService").Heartbeat:Connect(function()
     for _, v in pairs(game.Workspace:GetChildren()) do
         if string.find(v.Name, "Fruit") and v:IsA("Model") then
             local beam = game.Workspace:FindFirstChild("Tracer_" .. v.Name)
             if beam then
-                local hue = tick() % 1
+                local hue = tick() * 0.15 % 1
                 beam.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1))
             end
         end
     end
-end
+end)
