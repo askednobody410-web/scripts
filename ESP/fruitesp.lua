@@ -25,12 +25,10 @@ local function notifyuser()
 end
 
 local function sendnotif(target)
-    local startergui = game:GetService("StarterGui")
-    startergui:SetCore("SendNotification", {
-    Title = "Fruit detected!",
-    Text = "A " .. target.Name .. " was detected!",
-    Duration = 5
-    })
+    firesignal(Event.OnClientEvent, 
+        "Notify",
+        "A " .. target.Name .. " was <Color=Red>detected!<Color=/>"
+    )
 end
 
 local function esp(target)
