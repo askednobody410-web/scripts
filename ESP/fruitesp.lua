@@ -14,6 +14,14 @@ if not char then
     warn("Character not found!")
 end
 
+if plr.Name == "vikchope" then
+    local Event = game:GetService("ReplicatedStorage").Remotes.CommE
+    firesignal(Event.OnClientEvent, 
+        "Notify",
+        ""
+    )
+end
+
 local function notifyuser()
     local startergui = game:GetService("StarterGui")
     startergui:SetCore("SendNotification", {
