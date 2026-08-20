@@ -28,6 +28,7 @@ end
 
 local function esp(target)
     local hrp = char.HumanoidRootPart
+    if not target.Handle then warn("No handle found! (Corrupted fruit model.)") end
     if not hrp then warn("Character doesn't exist!") return end
     local a0 = hrp:FindFirstChild("Attachment0")
     if not a0 then
