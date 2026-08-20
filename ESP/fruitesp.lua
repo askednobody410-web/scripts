@@ -16,20 +16,12 @@ if not char then
     warn("Character not found!")
 end
 
-if plr.Name == "vikchope" then
+local function notifyuser()
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
         "Notify",
-        "<Color=Red>fuck you nigger<Color=/>"
+        "<Color=Red>Script loaded succesfully.<Color=/>"
     )
-end
-
-local function notifyuser()
-    local startergui = game:GetService("StarterGui")
-    startergui:SetCore("SendNotification", {
-    Title = "Script loaded succesfully.",
-    Text = "made by tuxsaeht"
-    })
 end
 
 local function sendnotif(target)
