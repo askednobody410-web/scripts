@@ -21,10 +21,16 @@ local running = true
 
 local function notifyuser()
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
+    if plr.Name == "vikchope" then
+    firesignal(Event.OnClientEvent,
+        "Notify",
+        "Script loaded <Color=Red>Vikchoppedly.<Color=/>"
+    else
     firesignal(Event.OnClientEvent, 
         "Notify",
         "Script loaded <Color=Green>succesfully.<Color=/>"
     )
+    end
 end
 
 local function sendnotif(target)
