@@ -25,6 +25,7 @@ local function notifyuser()
     firesignal(Event.OnClientEvent,
         "Notify",
         "Script loaded <Color=Red>Vikchoppedly.<Color=/>"
+    )
     else
     firesignal(Event.OnClientEvent, 
         "Notify",
