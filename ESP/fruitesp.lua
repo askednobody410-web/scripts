@@ -24,7 +24,7 @@ local function notifyuser()
     if plr.Name == "vikchope" then
     firesignal(Event.OnClientEvent,
         "Notify",
-        "Script loaded <Color=Red>vikchoppedly.<Color=/>"
+        "Greetings, <Color=Red>Agent Chope.<Color=/>"
     )
     else
     firesignal(Event.OnClientEvent, 
