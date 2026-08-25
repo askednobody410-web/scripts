@@ -1,4 +1,4 @@
-local getfruits = getgenv().AutoGetFruits
+local getfruits = getgenv().AutoGetFruits or false
 
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
@@ -24,7 +24,7 @@ local function notifyuser()
     if plr.Name == "vikchope" then
     firesignal(Event.OnClientEvent,
         "Notify",
-        "Script loaded <Color=Red>Vikchoppedly.<Color=/>"
+        "Script loaded <Color=Red>vikchoppedly.<Color=/>"
     )
     else
     firesignal(Event.OnClientEvent, 
@@ -33,6 +33,9 @@ local function notifyuser()
     )
     end
 end
+
+notifyuser()
+task.wait(2)
 
 local function sendnotif(target)
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
@@ -127,5 +130,3 @@ game.Workspace.ChildRemoved:Connect(function(v)
         end
     end
 end)
-
-notifyuser()
