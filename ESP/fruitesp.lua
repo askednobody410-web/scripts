@@ -1,3 +1,5 @@
+local getfruits = getgenv().AutoGetFruits
+
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
 
@@ -48,7 +50,7 @@ local function esp(target)
         warn("No handle found! (Corrupted model OR target is not a fruit.) Skipping ESP for " .. tostring(target.Name))
         return false
     end
-    if target:IsA("Tool") then
+    if target:IsA("Tool") and getfruits then
         firetouchinterest(root, handle, 0)
         firetouchinterest(root, handle, 1)
     end
