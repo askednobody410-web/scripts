@@ -1,4 +1,4 @@
-local getfruits = getgenv().AutoGetFruits
+local getfruits = getgenv().AutoGetFruits or false
 
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
@@ -23,7 +23,7 @@ local function notifyuser()
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     firesignal(Event.OnClientEvent, 
         "Notify",
-        "<Color=Green>Script loaded succesfully.<Color=/>"
+        "Script loaded <Color=Green>succesfully.<Color=/>"
     )
 end
 
