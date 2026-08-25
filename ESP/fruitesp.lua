@@ -1,4 +1,4 @@
-local getfruits = getgenv().AutoGetFruits or false
+local getfruits = getgenv().AutoGetFruits
 
 local plr = game:GetService("Players").LocalPlayer
 local char = game.Workspace.Characters:FindFirstChild(plr.Name)
