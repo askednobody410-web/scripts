@@ -2,6 +2,7 @@ local getfruits = getgenv().AutoGetFruits or false
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -40,12 +41,27 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = game:GetService("CoreGui")
 
+local function notify(title, text)
+    if typeof(firesignal) == "function" then
+        local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
+        if Event then
+            firesignal(Event.OnClientEvent, "Notify", text)
+            return
+        end
+    end
+
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text:gsub("<Color=[^>]+>", ""):gsub("<Color=/>", ""),
+        Duration = 5
+    })
+end
+
 local function notifyuser()
-    local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     if plr.Name == "vikchope" then
-        firesignal(Event.OnClientEvent, "Notify", "Greetings, <Color=Red>Agent Chope.<Color=/>")
+        notify("Script", "Greetings, <Color=Red>Agent Chope.<Color=/>")
     else
-        firesignal(Event.OnClientEvent, "Notify", "Script loaded <Color=Green>succesfully.<Color=/>")
+        notify("Script", "Script loaded <Color=Green>succesfully.<Color=/>")
     end
 end
 
@@ -94,9 +110,8 @@ local function getClosestLocation(fruit)
 end
 
 local function sendnotif(target, locationName)
-    local Event = game:GetService("ReplicatedStorage").Remotes.CommE
     local island = locationName or "Unknown"
-    firesignal(Event.OnClientEvent, "Notify", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
+    notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
 local function createFruitBox(fruit, color)
