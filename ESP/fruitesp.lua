@@ -17,7 +17,16 @@ if not char then
 end
 
 local fruitModels = {}
-local running = true
+
+local tracerColors = {
+    Color3.fromRGB(255, 0, 0),     -- red
+    Color3.fromRGB(0, 255, 0),     -- green
+    Color3.fromRGB(0, 0, 255),     -- blue
+    Color3.fromRGB(160, 32, 240),  -- purple
+    Color3.fromRGB(255, 255, 0),   -- yellow
+    Color3.fromRGB(255, 255, 255), -- white
+    Color3.fromRGB(0, 255, 255)    -- cyan
+}
 
 local function notifyuser()
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
@@ -130,20 +139,12 @@ local function esp(target)
         beam.Width0 = 0.25
         beam.Width1 = 0.25
         beam.FaceCamera = true
+
+        local color = tracerColors[math.random(1, #tracerColors)]
+        beam.Color = ColorSequence.new(color)
     end
 
     return true
-end
-
-local function rainbowFruit(fruit)
-    while running and fruit and fruit.Parent do
-        local beam = game.Workspace:FindFirstChild("Tracer_" .. fruit.Name)
-        if beam then
-            local hue = tick() * 0.15 % 1
-            beam.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1))
-        end
-        task.wait()
-    end
 end
 
 local function checkFruit(v)
@@ -153,7 +154,6 @@ local function checkFruit(v)
             local locationName = closestLocation and closestLocation.Name or "Unknown"
             sendnotif(v, locationName)
             fruitModels[v] = true
-            coroutine.wrap(rainbowFruit)(v)
         end
     end
 end
