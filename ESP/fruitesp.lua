@@ -37,11 +37,54 @@ end
 notifyuser()
 task.wait(2)
 
-local function sendnotif(target)
+local function getClosestLocation(fruit)
+    local locations = workspace:FindFirstChild("_WorldOrigin") and workspace._WorldOrigin:FindFirstChild("Locations")
+    if not locations then
+        return nil, nil
+    end
+
+    local fruitPosition
+    local handle = fruit:FindFirstChild("Handle")
+    if handle and handle:IsA("BasePart") then
+        fruitPosition = handle.Position
+    elseif fruit.PrimaryPart then
+        fruitPosition = fruit.PrimaryPart.Position
+    else
+        for _, part in ipairs(fruit:GetChildren()) do
+            if part:IsA("BasePart") then
+                fruitPosition = part.Position
+                break
+            end
+        end
+    end
+
+    if not fruitPosition then
+        warn("Could not find position for fruit: " .. fruit.Name)
+        return nil, nil
+    end
+
+    local closestLocation = nil
+    local closestDistance = math.huge
+
+    for _, locationPart in ipairs(locations:GetChildren()) do
+        if locationPart:IsA("BasePart") then
+            local distance = (fruitPosition - locationPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestLocation = locationPart
+            end
+        end
+    end
+
+    return closestLocation, closestDistance
+end
+
+local function sendnotif(target, locationName)
     local Event = game:GetService("ReplicatedStorage").Remotes.CommE
+    local island = locationName or "Unknown"
     firesignal(Event.OnClientEvent, 
         "Notify",
-        "A " .. target.Name .. " was <Color=Red>detected!<Color=/>"
+        "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>"
     )
 end
 
@@ -106,7 +149,9 @@ end
 local function checkFruit(v)
     if string.find(v.Name, "Fruit") and v:IsA("Model") and not fruitModels[v] then
         if esp(v) then
-            sendnotif(v)
+            local closestLocation = getClosestLocation(v)
+            local locationName = closestLocation and closestLocation.Name or "Unknown"
+            sendnotif(v, locationName)
             fruitModels[v] = true
             coroutine.wrap(rainbowFruit)(v)
         end
