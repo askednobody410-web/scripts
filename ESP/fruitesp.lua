@@ -66,7 +66,7 @@ local function notifyuser()
 end
 
 notifyuser()
-task.wait(2)
+task.wait(0.25)
 
 local function getClosestLocation(fruit)
     local locations = workspace:FindFirstChild("_WorldOrigin") and workspace._WorldOrigin:FindFirstChild("Locations")
