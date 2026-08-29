@@ -142,27 +142,11 @@ local function createFruitBox(fruit, color)
     nameLabel.TextXAlignment = Enum.TextXAlignment.Center
     nameLabel.Parent = box
 
-    local distBg = Instance.new("Frame")
-    distBg.Name = "DistBg"
-    distBg.Size = UDim2.new(1, 0, 0, 3)
-    distBg.Position = UDim2.new(0, 0, 1, 3)
-    distBg.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    distBg.BackgroundTransparency = 0.25
-    distBg.BorderSizePixel = 0
-    distBg.Parent = box
-
-    local distFill = Instance.new("Frame")
-    distFill.Name = "DistFill"
-    distFill.Size = UDim2.new(1, 0, 1, 0)
-    distFill.BackgroundColor3 = color
-    distFill.BorderSizePixel = 0
-    distFill.Parent = distBg
-
     local distLabel = Instance.new("TextLabel")
     distLabel.Name = "DistLabel"
     distLabel.BackgroundTransparency = 1
     distLabel.Size = UDim2.new(1, 0, 0, 12)
-    distLabel.Position = UDim2.new(0, 0, 1, 7)
+    distLabel.Position = UDim2.new(0, 0, 1, 3)
     distLabel.Font = Enum.Font.Gotham
     distLabel.TextSize = 11
     distLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
@@ -176,7 +160,6 @@ local function createFruitBox(fruit, color)
         Box = box,
         Stroke = stroke,
         Name = nameLabel,
-        DistFill = distFill,
         DistLabel = distLabel,
         Color = color,
         Handle = handle
@@ -211,17 +194,18 @@ local function updateFruitBoxes()
         end
 
         local distance = (Camera.CFrame.Position - handle.Position).Magnitude
-        local scale = math.clamp(380 / distance, 22, 70)
-        local boxHeight = scale
-        local boxWidth = scale * 0.55
 
-        data.Box.Size = UDim2.new(0, boxWidth, 0, boxHeight)
-        data.Box.Position = UDim2.new(0, position.X - boxWidth / 2, 0, position.Y - boxHeight / 2)
+        local size = handle.Size
+        local maxDim = math.max(size.X, size.Y, size.Z)
+        local worldSize = maxDim * 1.4
+
+        local screenSize = (worldSize / distance) * 300
+        screenSize = math.clamp(screenSize, 18, 90)
+
+        data.Box.Size = UDim2.new(0, screenSize, 0, screenSize)
+        data.Box.Position = UDim2.new(0, position.X - screenSize / 2, 0, position.Y - screenSize / 2)
         data.Container.Visible = true
 
-        local maxDist = 900
-        local fill = math.clamp(1 - (distance / maxDist), 0.1, 1)
-        data.DistFill.Size = UDim2.new(fill, 0, 1, 0)
         data.DistLabel.Text = string.format("%dm", math.floor(distance))
     end
 end
