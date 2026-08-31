@@ -2,6 +2,7 @@ local getfruits = getgenv().AutoGetFruits or false
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -40,18 +41,35 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = game:GetService("CoreGui")
 
-local function notify(text)
-    local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
-    if Event then
-        firesignal(Event.OnClientEvent, "Notify", text)
+local function notify(title, text)
+    local usedFiresignal = false
+
+    if typeof(firesignal) == "function" then
+        local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
+        if Event then
+            local ok = pcall(function()
+                firesignal(Event.OnClientEvent, "Notify", text)
+            end)
+            if ok then
+                usedFiresignal = true
+            end
+        end
+    end
+
+    if not usedFiresignal then
+        StarterGui:SetCore("SendNotification", {
+            Title = title or "Notification",
+            Text = text:gsub("<Color=[^>]+>", ""):gsub("<Color=/>", ""),
+            Duration = 5
+        })
     end
 end
 
 local function notifyuser()
     if plr.Name == "vikchope" then
-        notify("Greetings, <Color=Red>Agent Chope.<Color=/>")
+        notify("Script", "Greetings, <Color=Red>Agent Chope.<Color=/>")
     else
-        notify("Script loaded <Color=Green>succesfully.<Color=/>")
+        notify("Script", "Script loaded <Color=Green>succesfully.<Color=/>")
     end
 end
 
@@ -101,7 +119,7 @@ end
 
 local function sendnotif(target, locationName)
     local island = locationName or "Unknown"
-    notify("A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
+    notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
 local function createFruitBox(fruit, color)
