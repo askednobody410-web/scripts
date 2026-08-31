@@ -4,7 +4,6 @@ local viewfruits = getgenv().DebugFruitViewer or false
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -44,27 +43,18 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = game:GetService("CoreGui")
 
-local function notify(title, text)
-    if typeof(firesignal) == "function" then
-        local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
-        if Event then
-            firesignal(Event.OnClientEvent, "Notify", text)
-            return
-        end
+local function notify(text)
+    local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
+    if Event then
+        firesignal(Event.OnClientEvent, "Notify", text)
     end
-
-    StarterGui:SetCore("SendNotification", {
-        Title = title,
-        Text = text:gsub("<Color=[^>]+>", ""):gsub("<Color=/>", ""),
-        Duration = 5
-    })
 end
 
 local function notifyuser()
     if plr.Name == "vikchope" then
-        notify("Script", "Greetings, <Color=Red>Agent Chope.<Color=/>")
+        notify("Greetings, <Color=Red>Agent Chope.<Color=/>")
     else
-        notify("Script", "Script loaded <Color=Green>succesfully.<Color=/>")
+        notify("Script loaded <Color=Green>succesfully.<Color=/>")
     end
 end
 
@@ -114,7 +104,7 @@ end
 
 local function sendnotif(target, locationName)
     local island = locationName or "Unknown"
-    notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
+    notify("A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
 local function createFruitBox(fruit, color)
