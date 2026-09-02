@@ -39,24 +39,28 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FruitESP_Safe"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("CoreGui")
+pcall(function()
+    ScreenGui.Parent = game:GetService("CoreGui")
+end)
+if not ScreenGui.Parent then
+    ScreenGui.Parent = plr:WaitForChild("PlayerGui")
+end
 
 local function notify(title, text)
     pcall(function()
         StarterGui:SetCore("SendNotification", {
             Title = title or "Notification",
-            Text = text,
-            Duration = 5,
-            Icon = "rbxassetid://6031075938"
+            Text = tostring(text),
+            Duration = 5
         })
     end)
 end
 
 local function notifyuser()
     if plr.Name == "vikchope" then
-        notify("Script", "Greetings, Agent Chope.")
+        notify("Fruit ESP", "Greetings, Agent Chope.")
     else
-        notify("Script", "Script loaded successfully.")
+        notify("Fruit ESP", "Script loaded successfully.")
     end
 end
 
@@ -230,8 +234,12 @@ local function createTracer(target, color)
     if not handle then return false end
 
     if target:IsA("Tool") and getfruits then
-        firetouchinterest(root, handle, 0)
-        firetouchinterest(root, handle, 1)
+        if typeof(firetouchinterest) == "function" then
+            pcall(function()
+                firetouchinterest(root, handle, 0)
+                firetouchinterest(root, handle, 1)
+            end)
+        end
     end
 
     local att0 = root:FindFirstChild("Attachment0")
