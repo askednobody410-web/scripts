@@ -116,17 +116,31 @@ local function sendnotif(target, locationName)
     notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
-local function createFruitBox(fruit, color)
+local function removeFruitESP(fruit)
     if fruitESP[fruit] then
-        local old = fruitESP[fruit]
-        if old.Square then old.Square:Remove() end
-        if old.Name then old.Name:Remove() end
-        if old.DistLabel then old.DistLabel:Remove() end
+        local data = fruitESP[fruit]
+        if data.Square then data.Square:Remove() end
+        if data.Name then data.Name:Remove() end
+        if data.DistLabel then data.DistLabel:Remove() end
+        if data.Tracer then data.Tracer:Remove() end
         fruitESP[fruit] = nil
     end
+end
+
+local function createFruitESP(fruit, color)
+    removeFruitESP(fruit)
 
     local handle = fruit:FindFirstChild("Handle")
-    if not handle then return end
+    if not handle then return false end
+
+    if not char then return false end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+
+    if fruit:IsA("Tool") and getfruits then
+        firetouchinterest(root, handle, 0)
+        firetouchinterest(root, handle, 1)
+    end
 
     local square = Drawing.new("Square")
     square.Visible = false
@@ -155,29 +169,31 @@ local function createFruitBox(fruit, color)
     distLabel.Font = 2
     distLabel.Text = ""
 
+    local tracer = Drawing.new("Line")
+    tracer.Visible = false
+    tracer.Color = color
+    tracer.Thickness = 1.5
+    tracer.Transparency = 1
+
     fruitESP[fruit] = {
         Square = square,
         Name = nameLabel,
         DistLabel = distLabel,
+        Tracer = tracer,
         Color = color,
         Handle = handle
     }
+
+    return true
 end
 
-local function removeFruitBox(fruit)
-    if fruitESP[fruit] then
-        local data = fruitESP[fruit]
-        if data.Square then data.Square:Remove() end
-        if data.Name then data.Name:Remove() end
-        if data.DistLabel then data.DistLabel:Remove() end
-        fruitESP[fruit] = nil
-    end
-end
+local function updateFruitESP()
+    local viewport = Camera.ViewportSize
+    local tracerOrigin = Vector2.new(viewport.X / 2, viewport.Y)
 
-local function updateFruitBoxes()
     for fruit, data in pairs(fruitESP) do
         if not fruit or not fruit.Parent then
-            removeFruitBox(fruit)
+            removeFruitESP(fruit)
             continue
         end
 
@@ -186,6 +202,7 @@ local function updateFruitBoxes()
             data.Square.Visible = false
             data.Name.Visible = false
             data.DistLabel.Visible = false
+            data.Tracer.Visible = false
             continue
         end
 
@@ -195,6 +212,7 @@ local function updateFruitBoxes()
             data.Square.Visible = false
             data.Name.Visible = false
             data.DistLabel.Visible = false
+            data.Tracer.Visible = false
             continue
         end
 
@@ -209,6 +227,7 @@ local function updateFruitBoxes()
 
         local x = position.X - screenSize / 2
         local y = position.Y - screenSize / 2
+        local center = Vector2.new(position.X, position.Y)
 
         data.Square.Size = Vector2.new(screenSize, screenSize)
         data.Square.Position = Vector2.new(x, y)
@@ -220,60 +239,18 @@ local function updateFruitBoxes()
         data.DistLabel.Text = string.format("%dm", math.floor(distance))
         data.DistLabel.Position = Vector2.new(position.X, y + screenSize + 4)
         data.DistLabel.Visible = true
+
+        data.Tracer.From = tracerOrigin
+        data.Tracer.To = center
+        data.Tracer.Visible = true
     end
-end
-
-local function createTracer(target, color)
-    if not char then return false end
-
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return false end
-
-    local handle = target:FindFirstChild("Handle")
-    if not handle then return false end
-
-    if target:IsA("Tool") and getfruits then
-        firetouchinterest(root, handle, 0)
-        firetouchinterest(root, handle, 1)
-    end
-
-    local att0 = root:FindFirstChild("Attachment0")
-    if not att0 then
-        att0 = Instance.new("Attachment")
-        att0.Name = "Attachment0"
-        att0.Parent = root
-    end
-
-    local att1 = handle:FindFirstChild("Attachment1")
-    if not att1 then
-        att1 = Instance.new("Attachment")
-        att1.Name = "Attachment1"
-        att1.Parent = handle
-    end
-
-    local beam = workspace:FindFirstChild("Tracer_" .. target.Name)
-    if not beam then
-        beam = Instance.new("Beam")
-        beam.Parent = workspace
-        beam.Name = "Tracer_" .. target.Name
-        beam.Attachment0 = att0
-        beam.Attachment1 = att1
-        beam.Width0 = 0.25
-        beam.Width1 = 0.25
-        beam.FaceCamera = true
-        beam.Color = ColorSequence.new(color)
-    end
-
-    return true
 end
 
 local function checkFruit(v)
     if string.find(v.Name, "Fruit") and v:IsA("Model") and not fruitModels[v] then
         local color = tracerColors[math.random(1, #tracerColors)]
 
-        if createTracer(v, color) then
-            createFruitBox(v, color)
-
+        if createFruitESP(v, color) then
             local closestLocation = getClosestLocation(v)
             local locationName = closestLocation and closestLocation.Name or "Unknown"
             sendnotif(v, locationName)
@@ -294,13 +271,8 @@ end)
 workspace.ChildRemoved:Connect(function(v)
     if string.find(v.Name, "Fruit") then
         fruitModels[v] = nil
-        removeFruitBox(v)
-
-        local beam = workspace:FindFirstChild("Tracer_" .. v.Name)
-        if beam then
-            beam:Destroy()
-        end
+        removeFruitESP(v)
     end
 end)
 
-RunService.RenderStepped:Connect(updateFruitBoxes)
+RunService.RenderStepped:Connect(updateFruitESP)
