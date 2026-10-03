@@ -35,12 +35,6 @@ local tracerColors = {
     Color3.fromRGB(0, 255, 255)
 }
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FruitESP"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("CoreGui")
-
 local function notify(title, text)
     local usedFiresignal = false
 
@@ -122,97 +116,128 @@ local function sendnotif(target, locationName)
     notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
-local function createFruitBox(fruit, color)
+local function getLocalRoot()
+    if not char or not char.Parent then
+        char = workspace.Characters:FindFirstChild(plr.Name)
+        if not char then
+            for _, v in pairs(workspace.Characters:GetChildren()) do
+                if v.Name == plr.Name then
+                    char = v
+                    break
+                end
+            end
+        end
+    end
+    if not char then return nil end
+    return char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+end
+
+local function removeFruitESP(fruit)
     if fruitESP[fruit] then
-        fruitESP[fruit].Container:Destroy()
+        local data = fruitESP[fruit]
+        if data.Square then data.Square:Remove() end
+        if data.Name then data.Name:Remove() end
+        if data.DistLabel then data.DistLabel:Remove() end
+        if data.Tracer then data.Tracer:Remove() end
         fruitESP[fruit] = nil
     end
+end
+
+local function createFruitESP(fruit, color)
+    removeFruitESP(fruit)
 
     local handle = fruit:FindFirstChild("Handle")
-    if not handle then return end
+    if not handle then return false end
 
-    local container = Instance.new("Frame")
-    container.Name = fruit.Name
-    container.BackgroundTransparency = 1
-    container.BorderSizePixel = 0
-    container.Visible = false
-    container.Parent = ScreenGui
+    local root = getLocalRoot()
+    if not root then return false end
 
-    local box = Instance.new("Frame")
-    box.Name = "Box"
-    box.BackgroundTransparency = 0.88
-    box.BackgroundColor3 = Color3.new(0, 0, 0)
-    box.BorderSizePixel = 0
-    box.Parent = container
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if fruit:IsA("Tool") and getfruits and hrp then
+        firetouchinterest(hrp, handle, 0)
+        firetouchinterest(hrp, handle, 1)
+    end
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = color
-    stroke.Thickness = 1.4
-    stroke.Transparency = 0.1
-    stroke.Parent = box
+    local square = Drawing.new("Square")
+    square.Visible = false
+    square.Color = color
+    square.Thickness = 1.5
+    square.Transparency = 1
+    square.Filled = false
 
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Name = "Name"
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Size = UDim2.new(1, 0, 0, 15)
-    nameLabel.Position = UDim2.new(0, 0, 0, -17)
-    nameLabel.Font = Enum.Font.GothamMedium
-    nameLabel.TextSize = 12
-    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    nameLabel.TextStrokeTransparency = 0.35
-    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    local nameLabel = Drawing.new("Text")
+    nameLabel.Visible = false
+    nameLabel.Color = Color3.fromRGB(255, 255, 255)
+    nameLabel.Size = 14
+    nameLabel.Center = true
+    nameLabel.Outline = true
+    nameLabel.OutlineColor = Color3.new(0, 0, 0)
+    nameLabel.Font = 2
     nameLabel.Text = fruit.Name
-    nameLabel.TextXAlignment = Enum.TextXAlignment.Center
-    nameLabel.Parent = box
 
-    local distLabel = Instance.new("TextLabel")
-    distLabel.Name = "DistLabel"
-    distLabel.BackgroundTransparency = 1
-    distLabel.Size = UDim2.new(1, 0, 0, 12)
-    distLabel.Position = UDim2.new(0, 0, 1, 3)
-    distLabel.Font = Enum.Font.Gotham
-    distLabel.TextSize = 11
-    distLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
-    distLabel.TextStrokeTransparency = 0.45
+    local distLabel = Drawing.new("Text")
+    distLabel.Visible = false
+    distLabel.Color = Color3.fromRGB(210, 210, 210)
+    distLabel.Size = 12
+    distLabel.Center = true
+    distLabel.Outline = true
+    distLabel.OutlineColor = Color3.new(0, 0, 0)
+    distLabel.Font = 2
     distLabel.Text = ""
-    distLabel.TextXAlignment = Enum.TextXAlignment.Center
-    distLabel.Parent = box
+
+    local tracer = Drawing.new("Line")
+    tracer.Visible = false
+    tracer.Color = color
+    tracer.Thickness = 1.5
+    tracer.Transparency = 1
 
     fruitESP[fruit] = {
-        Container = container,
-        Box = box,
-        Stroke = stroke,
+        Square = square,
         Name = nameLabel,
         DistLabel = distLabel,
+        Tracer = tracer,
         Color = color,
         Handle = handle
     }
+
+    return true
 end
 
-local function removeFruitBox(fruit)
-    if fruitESP[fruit] then
-        fruitESP[fruit].Container:Destroy()
-        fruitESP[fruit] = nil
+local function updateFruitESP()
+    local root = getLocalRoot()
+    local tracerOrigin = nil
+    local rootOnScreen = false
+
+    if root then
+        local rootPos, rootVisible = Camera:WorldToViewportPoint(root.Position)
+        if rootVisible and rootPos.Z > 0 then
+            tracerOrigin = Vector2.new(rootPos.X, rootPos.Y)
+            rootOnScreen = true
+        end
     end
-end
 
-local function updateFruitBoxes()
     for fruit, data in pairs(fruitESP) do
         if not fruit or not fruit.Parent then
-            removeFruitBox(fruit)
+            removeFruitESP(fruit)
             continue
         end
 
         local handle = fruit:FindFirstChild("Handle") or data.Handle
         if not handle or not handle:IsA("BasePart") then
-            data.Container.Visible = false
+            data.Square.Visible = false
+            data.Name.Visible = false
+            data.DistLabel.Visible = false
+            data.Tracer.Visible = false
             continue
         end
 
-        local position, onScreen = Camera:WorldToScreenPoint(handle.Position)
+        local position, onScreen = Camera:WorldToViewportPoint(handle.Position)
 
-        if not onScreen then
-            data.Container.Visible = false
+        if not onScreen or position.Z < 0 then
+            data.Square.Visible = false
+            data.Name.Visible = false
+            data.DistLabel.Visible = false
+            data.Tracer.Visible = false
             continue
         end
 
@@ -225,65 +250,36 @@ local function updateFruitBoxes()
         local screenSize = (worldSize / distance) * 300
         screenSize = math.clamp(screenSize, 18, 90)
 
-        data.Box.Size = UDim2.new(0, screenSize, 0, screenSize)
-        data.Box.Position = UDim2.new(0, position.X - screenSize / 2, 0, position.Y - screenSize / 2)
-        data.Container.Visible = true
+        local x = position.X - screenSize / 2
+        local y = position.Y - screenSize / 2
+        local center = Vector2.new(position.X, position.Y)
+
+        data.Square.Size = Vector2.new(screenSize, screenSize)
+        data.Square.Position = Vector2.new(x, y)
+        data.Square.Visible = true
+
+        data.Name.Position = Vector2.new(position.X, y - 16)
+        data.Name.Visible = true
 
         data.DistLabel.Text = string.format("%dm", math.floor(distance))
+        data.DistLabel.Position = Vector2.new(position.X, y + screenSize + 4)
+        data.DistLabel.Visible = true
+
+        if rootOnScreen and tracerOrigin then
+            data.Tracer.From = tracerOrigin
+            data.Tracer.To = center
+            data.Tracer.Visible = true
+        else
+            data.Tracer.Visible = false
+        end
     end
-end
-
-local function createTracer(target, color)
-    if not char then return false end
-
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return false end
-
-    local handle = target:FindFirstChild("Handle")
-    if not handle then return false end
-
-    if target:IsA("Tool") and getfruits then
-        firetouchinterest(root, handle, 0)
-        firetouchinterest(root, handle, 1)
-    end
-
-    local att0 = root:FindFirstChild("Attachment0")
-    if not att0 then
-        att0 = Instance.new("Attachment")
-        att0.Name = "Attachment0"
-        att0.Parent = root
-    end
-
-    local att1 = handle:FindFirstChild("Attachment1")
-    if not att1 then
-        att1 = Instance.new("Attachment")
-        att1.Name = "Attachment1"
-        att1.Parent = handle
-    end
-
-    local beam = workspace:FindFirstChild("Tracer_" .. target.Name)
-    if not beam then
-        beam = Instance.new("Beam")
-        beam.Parent = workspace
-        beam.Name = "Tracer_" .. target.Name
-        beam.Attachment0 = att0
-        beam.Attachment1 = att1
-        beam.Width0 = 0.25
-        beam.Width1 = 0.25
-        beam.FaceCamera = true
-        beam.Color = ColorSequence.new(color)
-    end
-
-    return true
 end
 
 local function checkFruit(v)
     if string.find(v.Name, "Fruit") and v:IsA("Model") and not fruitModels[v] then
         local color = tracerColors[math.random(1, #tracerColors)]
 
-        if createTracer(v, color) then
-            createFruitBox(v, color)
-
+        if createFruitESP(v, color) then
             local closestLocation = getClosestLocation(v)
             local locationName = closestLocation and closestLocation.Name or "Unknown"
             sendnotif(v, locationName)
@@ -304,13 +300,8 @@ end)
 workspace.ChildRemoved:Connect(function(v)
     if string.find(v.Name, "Fruit") then
         fruitModels[v] = nil
-        removeFruitBox(v)
-
-        local beam = workspace:FindFirstChild("Tracer_" .. v.Name)
-        if beam then
-            beam:Destroy()
-        end
+        removeFruitESP(v)
     end
 end)
 
-RunService.RenderStepped:Connect(updateFruitBoxes)
+RunService.RenderStepped:Connect(updateFruitESP)
