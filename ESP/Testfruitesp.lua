@@ -116,6 +116,22 @@ local function sendnotif(target, locationName)
     notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
+local function getLocalRoot()
+    if not char or not char.Parent then
+        char = workspace.Characters:FindFirstChild(plr.Name)
+        if not char then
+            for _, v in pairs(workspace.Characters:GetChildren()) do
+                if v.Name == plr.Name then
+                    char = v
+                    break
+                end
+            end
+        end
+    end
+    if not char then return nil end
+    return char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+end
+
 local function removeFruitESP(fruit)
     if fruitESP[fruit] then
         local data = fruitESP[fruit]
@@ -133,13 +149,13 @@ local function createFruitESP(fruit, color)
     local handle = fruit:FindFirstChild("Handle")
     if not handle then return false end
 
-    if not char then return false end
-    local root = char:FindFirstChild("HumanoidRootPart")
+    local root = getLocalRoot()
     if not root then return false end
 
-    if fruit:IsA("Tool") and getfruits then
-        firetouchinterest(root, handle, 0)
-        firetouchinterest(root, handle, 1)
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if fruit:IsA("Tool") and getfruits and hrp then
+        firetouchinterest(hrp, handle, 0)
+        firetouchinterest(hrp, handle, 1)
     end
 
     local square = Drawing.new("Square")
@@ -188,8 +204,17 @@ local function createFruitESP(fruit, color)
 end
 
 local function updateFruitESP()
-    local viewport = Camera.ViewportSize
-    local tracerOrigin = Vector2.new(viewport.X / 2, viewport.Y)
+    local root = getLocalRoot()
+    local tracerOrigin = nil
+    local rootOnScreen = false
+
+    if root then
+        local rootPos, rootVisible = Camera:WorldToViewportPoint(root.Position)
+        if rootVisible and rootPos.Z > 0 then
+            tracerOrigin = Vector2.new(rootPos.X, rootPos.Y)
+            rootOnScreen = true
+        end
+    end
 
     for fruit, data in pairs(fruitESP) do
         if not fruit or not fruit.Parent then
@@ -240,9 +265,13 @@ local function updateFruitESP()
         data.DistLabel.Position = Vector2.new(position.X, y + screenSize + 4)
         data.DistLabel.Visible = true
 
-        data.Tracer.From = tracerOrigin
-        data.Tracer.To = center
-        data.Tracer.Visible = true
+        if rootOnScreen and tracerOrigin then
+            data.Tracer.From = tracerOrigin
+            data.Tracer.To = center
+            data.Tracer.Visible = true
+        else
+            data.Tracer.Visible = false
+        end
     end
 end
 
