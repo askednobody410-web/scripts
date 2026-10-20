@@ -79,7 +79,7 @@ end
 for _, v in ipairs(ItemsFolder:GetChildren()) do
     startTracking(v)
 end
-print("ready")
+print(true)
 
 ItemsFolder.ChildAdded:Connect(startTracking)
 ItemsFolder.ChildRemoved:Connect(stopTracking)
