@@ -1,4 +1,8 @@
-local getfruits = getgenv().AutoGetFruits or false
+if getgenv().FruitESPLoaded then
+    if typeof(getgenv().FruitESPUnload) == "function" then
+        getgenv().FruitESPUnload()
+    end
+end
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -6,9 +10,13 @@ local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+if typeof(Drawing) ~= "table" and typeof(Drawing) ~= "userdata" then
+    warn("[FruitESP] Drawing library not available")
+    return
+end
+
 local plr = LocalPlayer
 local char = workspace.Characters:FindFirstChild(plr.Name)
-
 if not char then
     for _, v in pairs(workspace.Characters:GetChildren()) do
         if v.Name == plr.Name then
@@ -18,28 +26,32 @@ if not char then
     end
 end
 
-if not char then
-    warn("Character not found!")
-end
-
 local fruitModels = {}
 local fruitESP = {}
+local connections = {}
+
+local GOLDEN = Color3.fromRGB(255, 215, 0)
 
 local tracerColors = {
     Color3.fromRGB(255, 0, 0),
     Color3.fromRGB(0, 255, 0),
     Color3.fromRGB(0, 0, 255),
     Color3.fromRGB(160, 32, 240),
-    Color3.fromRGB(255, 255, 0),
+    Color3.fromRGB(0, 255, 255),
     Color3.fromRGB(255, 255, 255),
-    Color3.fromRGB(0, 255, 255)
+    Color3.fromRGB(255, 105, 180),
+    Color3.fromRGB(255, 140, 0),
+    Color3.fromRGB(50, 255, 50),
+    Color3.fromRGB(0, 191, 255),
+    Color3.fromRGB(255, 20, 147),
 }
 
 local function notify(title, text)
     local usedFiresignal = false
 
     if typeof(firesignal) == "function" then
-        local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
+        local Event = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+            and game.ReplicatedStorage.Remotes:FindFirstChild("CommE")
         if Event then
             local ok = pcall(function()
                 firesignal(Event.OnClientEvent, "Notify", text)
@@ -51,11 +63,20 @@ local function notify(title, text)
     end
 
     if not usedFiresignal then
-        StarterGui:SetCore("SendNotification", {
-            Title = title or "Notification",
-            Text = text:gsub("<Color=[^>]+>", ""):gsub("<Color=/>", ""),
-            Duration = 5
-        })
+        local clean = text
+            :gsub("<Color=[^>]+>", "")
+            :gsub("<Color=/>", "")
+            :gsub("</Color>", "")
+        local ok, err = pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title or "Notification",
+                Text = clean,
+                Duration = 5
+            })
+        end)
+        if not ok then
+            warn("[FruitESP] SetCore notify failed:", err)
+        end
     end
 end
 
@@ -116,31 +137,54 @@ local function sendnotif(target, locationName)
     notify("Fruit Detected", "A " .. target.Name .. " was detected on <Color=Yellow>" .. island .. "!<Color=/>")
 end
 
-local function getLocalRoot()
-    if not char or not char.Parent then
-        char = workspace.Characters:FindFirstChild(plr.Name)
-        if not char then
-            for _, v in pairs(workspace.Characters:GetChildren()) do
-                if v.Name == plr.Name then
-                    char = v
-                    break
-                end
+local function refreshChar()
+    char = workspace.Characters:FindFirstChild(plr.Name)
+    if not char then
+        for _, v in pairs(workspace.Characters:GetChildren()) do
+            if v.Name == plr.Name then
+                char = v
+                break
             end
         end
+    end
+    return char
+end
+
+local function getLocalRoot()
+    if not char or not char.Parent then
+        refreshChar()
     end
     if not char then return nil end
     return char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
 end
 
-local function removeFruitESP(fruit)
-    if fruitESP[fruit] then
-        local data = fruitESP[fruit]
-        if data.Square then data.Square:Remove() end
-        if data.Name then data.Name:Remove() end
-        if data.DistLabel then data.DistLabel:Remove() end
-        if data.Tracer then data.Tracer:Remove() end
-        fruitESP[fruit] = nil
+local function tryCollect(fruit, handle)
+    if not getgenv().AutoGetFruits then return end
+    if not fruit:IsA("Tool") then return end
+
+    if not char or not char.Parent then
+        refreshChar()
     end
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp or not handle then return end
+
+    if typeof(firetouchinterest) == "function" then
+        pcall(function()
+            firetouchinterest(hrp, handle, 0)
+            firetouchinterest(hrp, handle, 1)
+        end)
+    end
+end
+
+local function removeFruitESP(fruit)
+    local data = fruitESP[fruit]
+    if not data then return end
+
+    if data.Square then pcall(function() data.Square:Destroy() end) end
+    if data.Name then pcall(function() data.Name:Destroy() end) end
+    if data.DistLabel then pcall(function() data.DistLabel:Destroy() end) end
+    if data.Tracer then pcall(function() data.Tracer:Destroy() end) end
+    fruitESP[fruit] = nil
 end
 
 local function createFruitESP(fruit, color)
@@ -152,18 +196,22 @@ local function createFruitESP(fruit, color)
     local root = getLocalRoot()
     if not root then return false end
 
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if fruit:IsA("Tool") and getfruits and hrp then
-        firetouchinterest(hrp, handle, 0)
-        firetouchinterest(hrp, handle, 1)
-    end
+    tryCollect(fruit, handle)
 
-    local square = Drawing.new("Square")
-    square.Visible = false
-    square.Color = color
-    square.Thickness = 1.5
-    square.Transparency = 1
-    square.Filled = false
+    local isGenericFruit = (fruit.Name == "Fruit")
+    local lineColor = isGenericFruit and GOLDEN or color
+    local lineThickness = isGenericFruit and 3 or 1.5
+
+    local ok, square = pcall(function()
+        local s = Drawing.new("Square")
+        s.Visible = false
+        s.Color = lineColor
+        s.Thickness = 1.5
+        s.Transparency = 1
+        s.Filled = false
+        return s
+    end)
+    if not ok or not square then return false end
 
     local nameLabel = Drawing.new("Text")
     nameLabel.Visible = false
@@ -187,8 +235,8 @@ local function createFruitESP(fruit, color)
 
     local tracer = Drawing.new("Line")
     tracer.Visible = false
-    tracer.Color = color
-    tracer.Thickness = 1.5
+    tracer.Color = lineColor
+    tracer.Thickness = lineThickness
     tracer.Transparency = 1
 
     fruitESP[fruit] = {
@@ -196,7 +244,7 @@ local function createFruitESP(fruit, color)
         Name = nameLabel,
         DistLabel = distLabel,
         Tracer = tracer,
-        Color = color,
+        Color = lineColor,
         Handle = handle
     }
 
@@ -289,19 +337,38 @@ local function checkFruit(v)
     end
 end
 
+local function unload()
+    for fruit in pairs(fruitESP) do
+        removeFruitESP(fruit)
+    end
+    table.clear(fruitModels)
+    table.clear(fruitESP)
+
+    for _, conn in ipairs(connections) do
+        if conn and conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    table.clear(connections)
+
+    getgenv().FruitESPLoaded = false
+    getgenv().FruitESPUnload = nil
+end
+
+getgenv().FruitESPUnload = unload
+getgenv().FruitESPLoaded = true
+
 for _, v in pairs(workspace:GetChildren()) do
     checkFruit(v)
 end
 
-workspace.ChildAdded:Connect(function(v)
-    checkFruit(v)
-end)
+table.insert(connections, workspace.ChildAdded:Connect(checkFruit))
 
-workspace.ChildRemoved:Connect(function(v)
+table.insert(connections, workspace.ChildRemoved:Connect(function(v)
     if string.find(v.Name, "Fruit") then
         fruitModels[v] = nil
         removeFruitESP(v)
     end
-end)
+end))
 
-RunService.RenderStepped:Connect(updateFruitESP)
+table.insert(connections, RunService.RenderStepped:Connect(updateFruitESP))
